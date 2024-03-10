@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Oklch lightness plot</title>
+<style>
+    :root {
+        --gaps: 8px;
+    }
+    body {
+        margin: var(--gaps);
+    }    
+    main {
+        display: grid;
+        grid-template-rows: 1fr auto;
+        gap: var(--gaps);
+    }
+    canvas {
+        width: 100%;
+    }
+    .sliders {
+        margin: 0;
+        display: grid; /* TODO: subgrid */
+        grid-template-columns: auto 1fr auto;
+        gap: var(--gaps);
+        margin-bottom: var(--gaps);
+    }
+</style>
+<main>
+    <canvas></canvas>
+    <form>
+        <div class="sliders">
+            <label for="chroma">Chroma</label>
+            <input name="chroma" type="range" min="0" max="0.5" value="0.125" step="any">
+            <output for="chroma">0.125</output>
+
+            <label for="hue">Hue</label>
+            <input name="hue" type="range" min="0" max="360" value="180" step="any">
+            <output for="hue">180</output>
+        </div>
+        <div>
+
+        </div>
+        Showing lightness for
+        <select name="lspace">
+            <option value="oklch">Oklch</option>
+            <option value="okhsl">Okhsl</option>
+        </select>
+        when mapped to
+        <select name="rgbspace">
+            <option value="srgb">sRGB</option>
+            <option value="p3">P3</option>
+        </select>
+        using
+        <select name="method">
+            <!-- TODO: current browser behavior -->
+            <option value="css">binary search with local MINDE</option>
+            <option value="clip">channel clipping</option>
+        </select>
+    </form>
+</main>
+<script type="module" src="index.js"></script>
