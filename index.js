@@ -65,9 +65,11 @@ function drawLightness({ chroma, hue, lightnessSpace, rgbSpace, method }) {
         inGamut[x] = rgb.inGamut();
         rgb.toGamut({ method });
     
-        gradient.data[4 * x + 0] = 255 * rgb.r + 0.5;
-        gradient.data[4 * x + 1] = 255 * rgb.g + 0.5;
-        gradient.data[4 * x + 2] = 255 * rgb.b + 0.5;
+        // Uint8ClampedArray does the rounding, which we do want:
+        // https://tc39.es/ecma262/multipage/abstract-operations.html#sec-touint8clamp
+        gradient.data[4 * x + 0] = 255 * rgb.r;
+        gradient.data[4 * x + 1] = 255 * rgb.g;
+        gradient.data[4 * x + 2] = 255 * rgb.b;
 
         // Perceptual lightness.
         lightness[x] = rgb.to('oklab').l;
