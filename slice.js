@@ -47,6 +47,10 @@ function ensureContext(colorSpace, textureCount = 0) {
     return current;
 }
 
+function inGamut(rgb) {
+    return rgb.every((v) => v >= 0 && v <= 1);
+}
+
 // Gamma encode from linear sRGB to sRGB. This is "simple sRGB" for simplicity:
 // https://en.wikipedia.org/wiki/SRGB#Transfer_function_(%22gamma%22)
 function encode(v) {
@@ -56,19 +60,16 @@ function encode(v) {
     return v ** (1 / 2.2);
 }
 
-function drawSlice({ hue, rgbSpace, method }) {
+function drawSlice({ hue, rgbSpace, method, highlight }) {
     if (rgbSpace !== 'srgb') {
         throw new Error('Only sRGB works');
     }
 
     const LinearRGB = Color.Space.get('srgb-linear');
 
-    const { ctx, width, height, textures } = ensureContext(rgbSpace, 2);
+    const { ctx, width, height, textures } = ensureContext(rgbSpace, 1);
 
-    // slice: A slice of constant hue with lightness and chroma varying 0-100%.
-    // gamut: A bitmap of what's in gamut in the RGB space in that slice.
-    const [slice, gamut] = textures;
-    gamut.data.fill(0);
+    const [slice] = textures;
 
     // We want a slice in Oklch, but can work in Oklab by scaling towards
     // the final a and b for the given hue angle.
@@ -91,29 +92,51 @@ function drawSlice({ hue, rgbSpace, method }) {
 
             // Convert to linear sRGB
             let rgb = oklab_to_linear_srgb(lab);
-            const inGamut = rgb.every((v) => v >= 0 && v <= 1);
-            if (!inGamut) {
+            const wasInGamut = inGamut(rgb);
+            if (!wasInGamut) {
                 if (method === 'css') {
-                    // TODO: This is very quite slow. Avoid creating new objects somehow?
+                    // TODO: This is very slow. Avoid creating new objects somehow?
                     rgb = new Color(LinearRGB, rgb).toGamut().coords;
+                } else if (method === 'chroma') {
+                    // Bisect chroma (a and b) until for a constant number of iterations.
+                    let [l, a, b] = lab;
+                    let lower = 0;
+                    let upper = 1;
+                    let iterations = 10;
+                    while (true) {
+                        let scale = (lower + upper) / 2;
+                        rgb = oklab_to_linear_srgb([l, scale * a, scale * b]);
+                        iterations--;
+                        if (iterations === 0) {
+                            break;
+                        }
+                        if (inGamut(rgb)) {
+                            lower = scale;
+                        } else {
+                            upper = scale;
+                        }
+                    }
+                    // If it's still out of gamut clipping will do the rest.
                 } else {
                     // Clipping doesn't need to be done explicitly, the ImageData
                     // Uint8ClampedArray will clamp to 0-255 when setting.
                 }
             }
+
+            if (highlight && !wasInGamut) {
+                // Invert the colors for highlight
+                rgb = rgb.map((v) => 1 - v);
+            }
+
             // Convert to sRGB. Uint8ClampedArray does the rounding for us:
             // https://tc39.es/ecma262/multipage/abstract-operations.html#sec-touint8clamp
             slice.data[offset + 0] = 255 * encode(rgb[0]);
             slice.data[offset + 1] = 255 * encode(rgb[1]);
             slice.data[offset + 2] = 255 * encode(rgb[2]);
-
-            // Use the alpha channel of the gamut ImageBitmap
-            gamut.data[offset + 3] = inGamut ? 255 : 0;
         }
     }
 
     ctx.putImageData(slice, 0, 0);
-    //ctx.putImageData(gamut, 0, 0);
 }
 
 const form = document.querySelector('form');
@@ -124,6 +147,7 @@ function update() {
         hue: form.elements.hue.value,
         rgbSpace: form.elements.rgbspace.value,
         method: form.elements.method.value,
+        highlight: form.elements.highlight.checked,
     };
     drawSlice(params);
     outputs[0].textContent = Number(params.hue).toFixed(1);

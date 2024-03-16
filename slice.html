@@ -38,9 +38,6 @@
             <input name="hue" type="range" min="0" max="360" value="255" step="any">
             <output for="hue">255</output>
         </div>
-        <div>
-
-        </div>
         Showing Oklch hue slice in
         <select name="rgbspace">
             <option value="srgb">sRGB</option>
@@ -48,10 +45,12 @@
         </select>
         using
         <select name="method">
+            <option value="chroma">reduce chroma</option>
             <option value="clip">channel clipping</option>
             <option value="css">binary search with local MINDE</option>
         </select>
         for out-of-gamut areas.
+        <input type="checkbox" name="highlight"><label for="highlight">Highlight out-of-gamut areas</label>
     </form>
 </main>
 <script type="module" src="slice.js"></script>
