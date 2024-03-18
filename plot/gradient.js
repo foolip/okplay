@@ -1,4 +1,4 @@
-import Color from "./color.js";
+import Color from "../color.js";
 
 const canvas = document.querySelector('canvas');
 
