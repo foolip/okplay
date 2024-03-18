@@ -1,7 +1,6 @@
-import Color from "./color.js";
-globalThis.Color = Color;
+import Color from "../color.js";
 
-import { oklab_to_linear_srgb } from './oklab.js';
+import { oklab_to_linear_srgb } from '../oklab.js';
 
 const canvas = document.querySelector('canvas');
 
@@ -93,10 +92,7 @@ function drawSlice({ hue, rgbSpace, method, highlight }) {
             let rgb = oklab_to_linear_srgb(lab);
             const wasInGamut = inGamut(rgb);
             if (!wasInGamut) {
-                if (method === 'css') {
-                    // TODO: This is very slow. Avoid creating new objects somehow?
-                    rgb = new Color(LinearRGB, rgb).toGamut().coords;
-                } else if (method === 'chroma') {
+                if (method === 'chroma') {
                     // Bisect chroma (a and b) until for a constant number of iterations.
                     let [l, a, b] = lab;
                     let lower = 0;
