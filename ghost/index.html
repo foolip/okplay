@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>👻 Oklab ghost</title>
+<style>
+    :root {
+        background: lab(50% 0 0);
+        overflow: hidden;
+        --gaps: 8px;
+    }
+    body {
+        margin: 0;
+    }    
+    main {
+        display: grid;
+        place-items: center;
+        height: 100dvh;
+    }
+    div {
+        aspect-ratio: 1;
+        width: calc(100dvmin - 2*var(--gaps));
+        border: 1px solid lab(10% 0 0);;
+        @media (min-resolution: 2dppx) {
+           border-width: .5px;
+        }
+    }
+    canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+<main>
+    <div>
+        <canvas></canvas>
+    </div>
+</main>
+<script type="module" src="ghost.js"></script>
