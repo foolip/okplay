@@ -1,0 +1,8 @@
+body {
+    background: color-mix(in srgb, peachpuff, white 50%);
+    color: color-mix(in srgb, tomato, black 70%);
+    font-family: system-ui;
+}
+a {
+    color: inherit;
+}
