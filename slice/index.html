@@ -11,15 +11,18 @@
     }    
     main {
         display: grid;
+        justify-items: center;
         grid-template-rows: 1fr auto;
         gap: var(--gaps);
     }
     canvas {
-        justify-self: center;
         width: 500px;
         height: 500px;
         border: 1px solid black;
         --image-rendering: pixelated;
+    }
+    form {
+        width: 500px;
     }
     .sliders {
         margin: 0;
@@ -37,17 +40,13 @@
             <input name="hue" type="range" min="0" max="360" value="255" step="any">
             <output for="hue">255</output>
         </div>
-        Showing Oklch hue slice in
-        <select name="rgbspace">
-            <option value="srgb">sRGB</option>
-            <option value="p3">P3</option>
-        </select>
-        using
+        Showing Oklch hue slice using
         <select name="method">
             <option value="clip">channel clipping</option>
             <option value="chroma">reduce chroma</option>
+            <option value="bbox">bounding box</option>
         </select>
-        for out-of-gamut areas.
+        <br>
         <input type="checkbox" name="highlight"><label for="highlight">Highlight out-of-gamut areas</label>
     </form>
 </main>

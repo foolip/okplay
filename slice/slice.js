@@ -58,10 +58,8 @@ function encode(v) {
     return v ** (1 / 2.2);
 }
 
-function drawSlice({ hue, rgbSpace, method, highlight }) {
-    if (rgbSpace !== 'srgb') {
-        throw new Error('Only sRGB works');
-    }
+function drawSlice({ hue, method, highlight }) {
+    const rgbSpace = 'srgb';
 
     const LinearRGB = Color.Space.get('srgb-linear');
 
@@ -140,7 +138,6 @@ const outputs = form.querySelectorAll('output');
 function update() {
     const params = {
         hue: form.elements.hue.value,
-        rgbSpace: form.elements.rgbspace.value,
         method: form.elements.method.value,
         highlight: form.elements.highlight.checked,
     };
