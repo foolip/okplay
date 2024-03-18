@@ -1,8 +1,7 @@
 import Color from "./color.js";
-
-import { oklab_to_linear_srgb, oklab_to_srgb } from './oklab.js';
-
 globalThis.Color = Color;
+
+import { oklab_to_linear_srgb } from './oklab.js';
 
 const canvas = document.querySelector('canvas');
 
