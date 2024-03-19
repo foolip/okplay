@@ -1,5 +1,3 @@
-import Color from "../color.js";
-
 import { oklab_to_linear_srgb } from '../oklab.js';
 
 const canvas = document.querySelector('canvas');
@@ -60,8 +58,6 @@ function encode(v) {
 
 function drawSlice({ hue, method, highlight }) {
     const rgbSpace = 'srgb';
-
-    const LinearRGB = Color.Space.get('srgb-linear');
 
     const { ctx, width, height, textures } = ensureContext(rgbSpace, 1);
 
