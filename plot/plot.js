@@ -1,44 +1,16 @@
+import { ensureContext } from '../canvas.js';
 import Color from "../color.js";
 
 const canvas = document.querySelector('canvas');
 
-// Cache of current state to know when the canvas needs to be recreated.
-let current = {
-    ctx: null,
-    width: 0,
-    height: 0,
-    colorSpace: '',
-};
-
-function ensureContext(colorSpace) {
-    if (colorSpace === "p3") {
-        colorSpace = "display-p3";
-    }
-
-    const rect = canvas.getBoundingClientRect();
-    const width = rect.width * devicePixelRatio;
-    const height = rect.height * devicePixelRatio;
-
-    if (!current.ctx ||
-        current.width !== width ||
-        current.height !== height ||
-        current.colorSpace !== colorSpace) {
-        canvas.width = width;
-        canvas.height = height;
-        Object.assign(current, {
-            ctx: canvas.getContext("2d", { colorSpace }),
-            width,
-            height,
-            colorSpace
-        });
-        console.log(`Created ${canvas.width}x${canvas.height} ${colorSpace} canvas`);
-    }
-    return current.ctx;
-}
-
 function drawLightness({ chroma, hue, lightnessSpace, rgbSpace, method }) {
-    const ctx = ensureContext(rgbSpace);
-    const { width, height } = canvas;
+    const rect = canvas.getBoundingClientRect();
+    const { ctx, width, height } = ensureContext(canvas, {
+        width: rect.width * devicePixelRatio,
+        height: rect.height * devicePixelRatio,
+        colorSpace: rgbSpace,
+    });
+
     ctx.reset();
 
     // Lightness 75% is used because the gamut is wide there, but

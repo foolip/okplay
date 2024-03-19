@@ -1,47 +1,7 @@
+import { ensureContext } from '../canvas.js';
 import { oklab_to_linear_srgb } from '../oklab.js';
 
 const canvas = document.querySelector('canvas');
-
-// Cache of current state to know when the canvas needs to be recreated.
-let current = {
-    ctx: null,
-    width: 0,
-    height: 0,
-    colorSpace: '',
-    textures: [],
-};
-
-function ensureContext(colorSpace, textureCount = 0) {
-    if (colorSpace === "p3") {
-        colorSpace = "display-p3";
-    }
-
-    const width = 500 * devicePixelRatio;
-    const height = 500 * devicePixelRatio;
-
-    if (!current.ctx ||
-        current.width !== width ||
-        current.height !== height ||
-        current.colorSpace !== colorSpace) {
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d", { colorSpace });
-        const textures = new Array(textureCount);
-        for (let i = 0; i < textureCount; i++) {
-            textures[i] = ctx.createImageData(width, height);
-            textures[i].data.fill(255);
-        }
-        Object.assign(current, {
-            ctx,
-            width,
-            height,
-            colorSpace,
-            textures,
-        });
-        console.log(`Created ${canvas.width}x${canvas.height} ${colorSpace} canvas`);
-    }
-    return current;
-}
 
 function inGamut(rgb) {
     return rgb.every((v) => v >= 0 && v <= 1);
@@ -57,9 +17,11 @@ function encode(v) {
 }
 
 function drawSlice({ hue, method, highlight }) {
-    const rgbSpace = 'srgb';
-
-    const { ctx, width, height, textures } = ensureContext(rgbSpace, 1);
+    const { ctx, width, height, textures } = ensureContext(canvas, {
+        width: 500 * devicePixelRatio,
+        height: 500 * devicePixelRatio,
+        textureCount: 1,
+    });
 
     const [slice] = textures;
 

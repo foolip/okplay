@@ -1,5 +1,6 @@
-import cie_xyz_1931_2deg from './CIE_xyz_1931_2deg.js';
+import { ensureContext } from '../canvas.js';
 import { xyz_to_oklab } from '../oklab.js';
+import cie_xyz_1931_2deg from './CIE_xyz_1931_2deg.js';
 
 // Mix between a and b (number or arrays of numbers) by some ratio.
 // Ratio 0 is 100% a, and 1 is 100% b.
@@ -14,35 +15,6 @@ function mix(a, b, ratio) {
 }
 
 const canvas = document.querySelector('canvas');
-
-// Cache of current state to know when the canvas needs to be recreated.
-let current = {
-    ctx: null,
-    width: 0,
-    height: 0,
-    textures: [],
-};
-
-function ensureContext() {
-    const rect = canvas.getBoundingClientRect();
-    const width = rect.width * devicePixelRatio;
-    const height = rect.height * devicePixelRatio;
-
-    if (!current.ctx ||
-        current.width !== width ||
-        current.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        Object.assign(current, {
-            ctx,
-            width,
-            height,
-        });
-        console.log(`Created ${canvas.width}x${canvas.height} canvas`);
-    }
-    return current;
-}
 
 // Convert XYZ to xyY, discarding Y.
 function xy(X, Y, Z) {
@@ -121,7 +93,12 @@ function drawGhost(ctx, width, height) {
 }
 
 function update() {
-    const { ctx, width, height } = ensureContext();
+    const rect = canvas.getBoundingClientRect();
+    const options = {
+        width: rect.width * devicePixelRatio,
+        height: rect.height * devicePixelRatio,
+    };
+    const { ctx, width, height } = ensureContext(canvas, options);
 
     ctx.reset();
     ctx.fillStyle = 'white';
