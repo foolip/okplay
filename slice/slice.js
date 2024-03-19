@@ -70,11 +70,11 @@ function drawSlice({ hue, method, highlight }) {
     const maxA = maxChroma * Math.cos(hueRadians);
     const maxB = maxChroma * Math.sin(hueRadians);
 
-    for (let x = 0; x < width; x++) {
-        for (let y = 0; y < height; y++) {
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
             // Oklab coordinates
             const lab = [
-                1 - (y / (height - 1)), // lightness
+                1 - (y / (height - 1)),
                 maxA * (x / (width - 1)),
                 maxB * (x / (width - 1)),
             ];
