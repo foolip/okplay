@@ -16,8 +16,8 @@ function ensureContext(colorSpace, textureCount = 0) {
         colorSpace = "display-p3";
     }
 
-    const width = 256 * devicePixelRatio;
-    const height = 256 * devicePixelRatio;
+    const width = 500 * devicePixelRatio;
+    const height = 500 * devicePixelRatio;
 
     if (!current.ctx ||
         current.width !== width ||
