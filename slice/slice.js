@@ -1,5 +1,6 @@
 import { ensureContext } from '../canvas.js';
 import { oklab_to_linear_srgb } from '../oklab.js';
+import { maxChromaForHue} from './limits.js';
 
 const canvas = document.querySelector('canvas');
 
@@ -16,7 +17,7 @@ function encode(v) {
     return v ** (1 / 2.2);
 }
 
-function drawSlice({ hue, method, highlight }) {
+function drawSlice({ hue, method, invertOOG, drawMaxChroma }) {
     const { ctx, width, height, textures } = ensureContext(canvas, {
         width: 500 * devicePixelRatio,
         height: 500 * devicePixelRatio,
@@ -32,6 +33,9 @@ function drawSlice({ hue, method, highlight }) {
     const maxA = maxChroma * Math.cos(hueRadians);
     const maxB = maxChroma * Math.sin(hueRadians);
 
+    // Maximum chroma at L=1 (distance from (1, 0, 0) to edge of chromaticity)
+    const maxChromaAtTop = maxChromaForHue(hue);
+
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
             // Oklab coordinates
@@ -40,6 +44,18 @@ function drawSlice({ hue, method, highlight }) {
                 maxA * (x / (width - 1)),
                 maxB * (x / (width - 1)),
             ];
+
+            // Clamp a and b to the maximum real chroma.
+            if (method === 'cone') {
+                const [L, a, b] = lab;
+                const limit = maxChromaAtTop * L;
+                const chroma = Math.sqrt(a * a + b * b);
+                if (chroma > limit) {
+                    const scaleFactor = limit / chroma;
+                    lab[1] *= scaleFactor;
+                    lab[2] *= scaleFactor;
+                }
+            }
 
             // (x, y) offset into textures
             const offset = 4 * (x + width * y);
@@ -50,13 +66,13 @@ function drawSlice({ hue, method, highlight }) {
             if (!wasInGamut) {
                 if (method === 'chroma') {
                     // Bisect chroma (a and b) until for a constant number of iterations.
-                    let [l, a, b] = lab;
+                    let [L, a, b] = lab;
                     let lower = 0;
                     let upper = 1;
                     let iterations = 10;
                     while (true) {
                         let scale = (lower + upper) / 2;
-                        rgb = oklab_to_linear_srgb([l, scale * a, scale * b]);
+                        rgb = oklab_to_linear_srgb([L, scale * a, scale * b]);
                         iterations--;
                         if (iterations === 0) {
                             break;
@@ -74,8 +90,7 @@ function drawSlice({ hue, method, highlight }) {
                 }
             }
 
-            if (highlight && !wasInGamut) {
-                // Invert the colors for highlight
+            if (invertOOG && !wasInGamut) {
                 rgb = rgb.map((v) => 1 - v);
             }
 
@@ -88,6 +103,18 @@ function drawSlice({ hue, method, highlight }) {
     }
 
     ctx.putImageData(slice, 0, 0);
+
+    if (drawMaxChroma) {
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+        ctx.lineTo(maxChromaAtTop * width / maxChroma, 0);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'black';
+        ctx.stroke();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'white';
+        ctx.stroke();
+    }
 }
 
 const form = document.querySelector('form');
@@ -97,7 +124,8 @@ function update() {
     const params = {
         hue: form.elements.hue.value,
         method: form.elements.method.value,
-        highlight: form.elements.highlight.checked,
+        invertOOG: form.elements.highlight.checked,
+        drawMaxChroma: form.elements.physical.checked,
     };
     drawSlice(params);
     outputs[0].textContent = Number(params.hue).toFixed(1);

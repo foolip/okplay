@@ -47,10 +47,12 @@
         <select name="method">
             <option value="clip">channel clipping</option>
             <option value="chroma">reduce chroma</option>
-            <option value="bbox">bounding box</option>
+            <option value="cone">spectral cone</option>
         </select>
         <br>
         <input type="checkbox" name="highlight"><label for="highlight">Highlight out-of-gamut areas</label>
+        <br>
+        <input type="checkbox" name="physical"><label for="physical">Show limit of physical colors</label>
     </form>
 </main>
 <script type="module" src="slice.js"></script>
