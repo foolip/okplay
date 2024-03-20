@@ -67,22 +67,12 @@ function mix(a, b, ratio) {
 }
 
 // Chromaticity diagram in Oklab (a, b) coordinates with L=1 looks like a ghost.
-function getGhostPath(options) {
-    const assertClockwise = options?.assertClockwise;
-
-    const path = new Path2D();
-
-    const points = [];
-
+// Generate the points that form the ghost outline as a spline.
+function* getGhostPoints() {
     // Spectral colors converted from XYZ coordinates.
-    for (const [wavelength, coords] of visibleXYZ.entries()) {
+    for (const coords of visibleXYZ.values()) {
         let [L, a, b] = xyz_to_oklab(coords);
-        a /= L;
-        b /= L;
-        path.lineTo(a, b);
-        if (assertClockwise) {
-            points.push([wavelength, a, b]);
-        }
+        yield [a / L, b / L];
     }
 
     // The line of purples, which is not straight in Oklab.
@@ -94,30 +84,24 @@ function getGhostPath(options) {
         const ratio = (i + 1) / (segments + 1);
         const purple = mix(violet, red, ratio);
         const { a, b } = ab(...purple);
-        path.lineTo(a, b);
-        if (assertClockwise) {
-            // points.push([undefined, a, b]);
-        }
+        yield [a, b];
     }
-
-    path.closePath();
-
-    if (assertClockwise) {
-        // Clockwise visually means hue angle must be decreasing.
-        let prevAngle = Infinity;
-        for (const [wavelength, a, b] of points) {
-            const angle = hueAngle(a, b);
-            if (angle >= prevAngle) {
-                throw new Error(`Non-clockwise hue at (${a}, ${b}) (wavelength ${wavelength})`);
-            }
-            prevAngle = angle;
-        }
-    }
-
-    return path;
 }
 
-// getGhostPath({ assertClockwise: true });
+function testClockwise() {
+    // Clockwise visually means hue angle must be decreasing.
+    let prevAngle = Infinity;
+    for (const [a, b] of getGhostPoints()) {
+        const angle = hueAngle(a, b);
+        if (angle >= prevAngle) {
+            // TODO: Allow for one crossing from 0 to 360.
+            throw new Error(`Non-clockwise hue move from ${prevAngle} to ${angle}`);
+        }
+        prevAngle = angle;
+    }
+}
+
+// testClockwise();
 
 const canvas = document.querySelector('canvas');
 
@@ -138,29 +122,31 @@ function drawGhost() {
     ctx.lineWidth = 2 * devicePixelRatio;
     ctx.lineJoin = 'round';
 
-    // Origo is placed to roughly center the ghost.
-    const origo = {
-        x: width * 0.5,
-        y: height * 0.3,
-    };
+    // Move (0, 0) to roughly center the ghost, and flip the y axis.
+    ctx.translate(Math.round(width * 0.5), Math.round(height * 0.3));
+    ctx.scale(1, -1);
 
-    const ghost = getGhostPath();
+    // Scale to fit [-1, 1] in both dimensions.
+    const scale = Math.min(width, height) / 2;
 
     // Draw the ghost outline.
     ctx.save();
-    ctx.translate(origo.x, origo.y);
-    const scale = Math.min(width, height) / 2;
-    ctx.scale(scale, -scale);
-    ctx.lineWidth /= scale;
-    ctx.stroke(ghost);
+    ctx.scale(scale, scale);
+    ctx.beginPath();
+    for (const [a, b] of getGhostPoints()) {
+        ctx.lineTo(a, b);
+    }
+    ctx.closePath();
     ctx.restore();
+    ctx.stroke();
 
     // Draw a cross at the origin
     const radius = 20;
-    ctx.lineTo(origo.x - radius, origo.y);
-    ctx.lineTo(origo.x + radius, origo.y);
-    ctx.moveTo(origo.x, origo.y - radius);
-    ctx.lineTo(origo.x, origo.y + radius);
+    ctx.beginPath();
+    ctx.lineTo(-radius, 0);
+    ctx.lineTo(radius, 0);
+    ctx.moveTo(0, -radius);
+    ctx.lineTo(0, radius);
     ctx.stroke();
 }
 
