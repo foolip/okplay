@@ -2,6 +2,8 @@ import { ensureContext } from '../canvas.js';
 import { oklab_to_linear_srgb } from '../oklab.js';
 import { maxChromaForHue} from './limits.js';
 
+import Color from "../color.js";
+
 const canvas = document.querySelector('canvas');
 
 function inGamut(rgb) {
@@ -35,6 +37,9 @@ function drawSlice({ hue, method, invertOOG, drawMaxChroma }) {
 
     // Maximum chroma at L=1 (distance from (1, 0, 0) to edge of chromaticity)
     const maxChromaAtTop = maxChromaForHue(hue);
+
+    // Single Color instance to update/mutate in place when using Color.js
+    const color = new Color('srgb-linear', [0, 0, 0]);
 
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
@@ -84,6 +89,10 @@ function drawSlice({ hue, method, invertOOG, drawMaxChroma }) {
                         }
                     }
                     // If it's still out of gamut clipping will do the rest.
+                } else if (method === 'colorjs') {
+                    [color.r, color.g, color.b] = rgb;
+                    color.toGamut();
+                    rgb = color.coords;
                 } else {
                     // Clipping doesn't need to be done explicitly, the ImageData
                     // Uint8ClampedArray will clamp to 0-255 when setting.
