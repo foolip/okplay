@@ -11,7 +11,8 @@
     }    
     main {
         display: grid;
-        justify-items: center;
+        place-content: center;
+        grid-template-columns: 502px;
         grid-template-rows: 1fr auto;
         gap: var(--gaps);
     }
@@ -21,14 +22,13 @@
         border: 1px solid black;
     }
     form {
-        width: 500px;
+        display: contents;
     }
     .sliders {
         margin: 0;
-        display: grid; /* TODO: subgrid */
+        display: grid;
         grid-template-columns: auto 1fr auto;
         gap: var(--gaps);
-        margin-bottom: var(--gaps);
     }
     output {
         width: 4ch;
@@ -43,16 +43,22 @@
             <input name="hue" type="range" min="0" max="360" value="255" step="any">
             <output for="hue">255</output>
         </div>
-        Showing Oklch hue slice using
-        <select name="method">
-            <option value="clip">channel clipping</option>
-            <option value="chroma">reduce chroma</option>
-            <option value="cone">spectral cone</option>
-        </select>
-        <br>
-        <input type="checkbox" name="highlight"><label for="highlight">Highlight out-of-gamut areas</label>
-        <br>
-        <input type="checkbox" name="physical"><label for="physical">Show limit of physical colors</label>
+        <div>
+            This is a slice of Oklch for the given hue, with chroma 0–0.4 on the x-axis and lightness 0–100% on the y-axis.
+        </div>
+        <div>
+            Handling of out-of-gamut areas:
+            <select name="method">
+                <option value="clip">channel clipping</option>
+                <option value="chroma">reduce chroma</option>
+            </select>
+        </div>
+        <div>
+            <input type="checkbox" name="highlight"><label for="highlight">Highlight out-of-gamut areas</label>
+        </div>
+        <div>
+            <input type="checkbox" name="physical"><label for="physical">Show limit of physical colors</label> (using the <a href="../ghost/">Oklab ghost</a> outline)
+        </div>
     </form>
 </main>
 <script type="module" src="slice.js"></script>
