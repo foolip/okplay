@@ -32,10 +32,12 @@ function drawLightness({ chroma, hue, lightnessSpace, rgbSpace, method }) {
         lxx.l = progress;
 
         // Convert to RGB color space, remember if it was out of gamut,
-        // and then gamut map using Color.js.
+        // and optionally gamut map using Color.js.
         const rgb = lxx.to(rgbSpace);
         inGamut[x] = rgb.inGamut();
-        rgb.toGamut({ method });
+        if (method === 'colorjs') {
+            rgb.toGamut();
+        }
     
         // Uint8ClampedArray does the rounding, which we do want:
         // https://tc39.es/ecma262/multipage/abstract-operations.html#sec-touint8clamp
