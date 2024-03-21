@@ -3,7 +3,7 @@ import Color from "../color.js";
 
 const canvas = document.querySelector('canvas');
 
-function drawLightness({ chroma, hue, lightnessSpace, rgbSpace, method }) {
+function drawLightness({ chroma, hue, rgbSpace, method }) {
     const rect = canvas.getBoundingClientRect();
     const { ctx, width, height } = ensureContext(canvas, {
         width: rect.width * devicePixelRatio,
@@ -13,10 +13,7 @@ function drawLightness({ chroma, hue, lightnessSpace, rgbSpace, method }) {
 
     ctx.reset();
 
-    // Lightness 75% is used because the gamut is wide there, but
-    // any number would work probably.
-    const lxx = new Color('oklch', [0.75, chroma, hue]).to(lightnessSpace);
-    console.assert(lxx.l > 0 && lxx.l < 1, 'color must have an l coordinate');
+    const lch = new Color('oklch', [0.5, chroma, hue]);
 
     // A single strip of pixels of the lightness gradient.
     const gradient = ctx.createImageData(width, 1);
@@ -29,13 +26,15 @@ function drawLightness({ chroma, hue, lightnessSpace, rgbSpace, method }) {
 
     for (let x = 0; x < width; x++) {
         const progress = x / (width - 1);
-        lxx.l = progress;
+        lch.l = progress;
 
         // Convert to RGB color space, remember if it was out of gamut,
         // and optionally gamut map using Color.js.
-        const rgb = lxx.to(rgbSpace);
+        const rgb = lch.to(rgbSpace);
         inGamut[x] = rgb.inGamut();
-        if (method === 'colorjs') {
+        if (method == 'clip') {
+            rgb.toGamut({ method });
+        } else if (method === 'colorjs') {
             rgb.toGamut();
         }
     
@@ -105,7 +104,6 @@ function update() {
     const params = {
         chroma: form.elements.chroma.value,
         hue: form.elements.hue.value,
-        lightnessSpace: form.elements.lspace.value,
         rgbSpace: form.elements.rgbspace.value,
         method: form.elements.method.value,
     };
