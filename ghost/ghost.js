@@ -10,11 +10,11 @@ import cie_xyz_1931_2deg from './CIE_xyz_1931_2deg.js';
 // Use 380-700 as that's the range in many Wikipedia illustrations, and
 // very little changes beyond that point.
 // TODO: Also drop 700? That point alone fails the assertClockwise check.
-const redLimit = 380;
-const violetLimit = 700;
+const redLimit = 700;
+const violetLimit = 380;
 const visibleXYZ = new Map(cie_xyz_1931_2deg
     .filter(([wavelength]) => {
-        return wavelength >= redLimit && wavelength <= violetLimit;
+        return wavelength >= violetLimit && wavelength <= redLimit;
     })
     .map(([wavelength, ...XYZ]) => [wavelength, XYZ])
 );
@@ -82,7 +82,7 @@ function* getGhostPoints() {
     const violet = visibleXYZ.get(violetLimit);
     for (let i = 0; i < segments; i++) {
         const ratio = (i + 1) / (segments + 1);
-        const purple = mix(violet, red, ratio);
+        const purple = mix(red, violet, ratio);
         const { a, b } = ab(...purple);
         yield [a, b];
     }
